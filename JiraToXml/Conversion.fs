@@ -58,3 +58,12 @@ type ConvertFixture() =
 
         let boolean = root "boolean" |> XElement.op_Explicit : bool
         boolean |> should equal true
+
+    [<Test>]
+    member x.child_records () =
+        let json = """{ "child": { "field": "test" } }"""
+        let root = Conversion.toXml json |> child
+
+        let element = root "child"
+        let field = XName.Get "field" |> element.Element
+        field.Value |> should equal "test"
