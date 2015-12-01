@@ -67,3 +67,27 @@ type ConvertFixture() =
         let element = root "child"
         let field = XName.Get "field" |> element.Element
         field.Value |> should equal "test"
+
+    [<Test>]
+    member x.arrays_are_always_named_items () =
+        let json = """{ "array": [] }"""
+        let root = Conversion.toXml json |> child
+
+        let elem = root "items"
+        elem.Name.LocalName |> should equal "items"
+
+    [<Test>]
+    member x.array_items_are_wrapped_to_item_elements () =
+        let json = """{ "array": [1, 2] }"""
+        let root = Conversion.toXml json |> child
+
+        let elem = root "items"
+
+        let items = 
+            XName.Get "item"
+            |> elem.Elements
+            |> Seq.map (fun e -> (e.Name.LocalName, (e |> XElement.op_Explicit : int)))
+            |> Seq.toList
+
+        items |> should equal [("item", 1); ("item", 2)]
+        
