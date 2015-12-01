@@ -2,34 +2,8 @@
 open System.Net
 open System.Text
 open System.IO
-open System.Xml
-open FSharp.Data
-open System.Xml.Linq
 open System.Threading
-
-let encode (name:string) =
-    let sanitized = name.Replace(" ", "")
-    XmlConvert.EncodeLocalName(sanitized)
-
-let toXml json =
-    let element name (value:obj) =
-        let encoded = encode name
-        let xName = XName.Get encoded
-        XElement(xName, value)
-
-    let rec toXml name json =
-        let mapRecord properties =
-            properties |> Array.map (fun (name, json) -> toXml name json)
-
-        let mapArray properties =
-            properties |> Array.map (fun (json) -> toXml "item" json)
-
-        match json with
-        | JsonValue.Array items -> element "items" (mapArray items)
-        | JsonValue.Record properties -> element name (mapRecord properties)
-        | field -> element name field
-    let root = toXml "root" (JsonValue.Parse(json))
-    XDocument(root)
+open JiraToXml.Conversion
 
 let loadJson (url:string) (login:string) (pass:string) =
     async {
@@ -85,7 +59,7 @@ let mainWorkTask (parameters:Parameters.T) =
             event.Trigger (sprintf "Loading json from url: %s" parameters.url)
             let! json = loadJson parameters.url parameters.user.Value parameters.password.Value
             event.Trigger "Converting xml"
-            let xml = toXml json
+            let xml = Conversion.toXml json
             event.Trigger (sprintf "Writing file %s" parameters.fileName)
             xml.Save(parameters.fileName)
             event.Trigger "Complete."
