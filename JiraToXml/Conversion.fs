@@ -23,7 +23,7 @@ module Conversion =
                 properties |> Array.map (fun (json) -> toXml "item" json)
 
             match json with
-            | JsonValue.Array items -> element "items" (mapArray items)
+            | JsonValue.Array items -> element name (mapArray items)
             | JsonValue.Record properties -> element name (mapRecord properties)
             | JsonValue.String string -> element name string    // prevent extra quotes around strings inside elements
             | field -> element name field
@@ -69,19 +69,19 @@ type ConvertFixture() =
         field.Value |> should equal "test"
 
     [<Test>]
-    member x.arrays_are_always_named_items () =
+    member x.arrays_are_named_by_field () =
         let json = """{ "array": [] }"""
         let root = Conversion.toXml json |> child
 
-        let elem = root "items"
-        elem.Name.LocalName |> should equal "items"
+        let elem = root "array"
+        elem.Name.LocalName |> should equal "array"
 
     [<Test>]
     member x.array_items_are_wrapped_to_item_elements () =
         let json = """{ "array": [1, 2] }"""
         let root = Conversion.toXml json |> child
 
-        let elem = root "items"
+        let elem = root "array"
 
         let items = 
             XName.Get "item"
